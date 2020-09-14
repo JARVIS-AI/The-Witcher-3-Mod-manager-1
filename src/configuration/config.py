@@ -2,12 +2,13 @@
 # pylint: disable=invalid-name,missing-docstring
 
 import configparser
+import sys
 import os
 import os.path as path
 from copy import deepcopy
 from typing import Union
 
-from PySide2.QtWidgets import QMainWindow, QWidget
+from PySide2.QtWidgets import QMainWindow, QMessageBox, QWidget
 
 from src.util.util import detectEncoding, getConfigFolder, getConfigFolderName, getDocumentsFolder, normalizePath
 from src.gui.alerts import MessageAlertReadingConfigINI
@@ -27,13 +28,6 @@ class Configuration:
 
     def __init__(self, documentsPath: str = '', gamePath: str = '', configPath: str = ''):
 
-        if documentsPath:
-            self.documents = documentsPath
-        else:
-            self.documents = getDocumentsFolder()
-
-        self.__userSettingsPath = self.documents + '/The Witcher 3'
-
         if configPath:
             self.__configPath = configPath
         else:
@@ -49,10 +43,30 @@ class Configuration:
 
         if not path.exists(self.__configPath):
             os.mkdir(self.__configPath)
+
+        self.readConfig()
+
+        if documentsPath and os.path.exists(documentsPath):
+            self.documents = documentsPath
+        elif self.get('PATHS', 'documents') and os.path.exists(self.get('PATHS', 'documents')):
+            self.documents = self.get('PATHS', 'documents')
+        else:
+            self.documents = getDocumentsFolder()
+
+        if not self.documents or not os.path.exists(self.documents):
+            QMessageBox.critical(
+                None,
+                "No documents configured",
+                "No documents path configured",
+                QMessageBox.StandardButton.Ok)
+            sys.exit(1)
+
+        self.__userSettingsPath = self.documents + '/The Witcher 3'
         if not path.exists(self.__userSettingsPath):
             os.mkdir(self.__userSettingsPath)
 
-        self.readConfig()
+        self.set('PATHS', 'documents', self.documents)
+
         self.readPriority()
 
         gamePath = self.getCorrectGamePath(gamePath)
@@ -90,7 +104,7 @@ class Configuration:
                 self.config.write(file, space_around_delimiters)
             self.configLastWritten = deepcopy(self.config)
         if self.priority != self.priorityLastWritten:
-            with open(self.__userSettingsPath + '/mods.settings', 'w', encoding='utf-16') as file:
+            with open(self.__userSettingsPath + '/mods.settings', 'w', encoding='utf-8') as file:
                 print(
                     f"writing mods.settings to {self.__configPath + '/mods.settings'}")
                 # proper-case all keys

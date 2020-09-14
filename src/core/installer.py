@@ -110,6 +110,11 @@ class Installer:
             mod.installUserSettings()
             mod.checkPriority()
 
+            if mod.readmes:
+                self.output("Detected one or more README files.")
+                self.output(
+                    f"  Some manual configuration may be required, please read the readme to make sure.")
+
             self.progress(0.9)
             exists = False
             for installed in self.model.all():
@@ -121,6 +126,7 @@ class Installer:
                     installed.date = mod.date
                     installed.menus = mod.menus
                     installed.inputsettings = mod.inputsettings
+                    installed.readmes = mod.readmes
                     exists = True
                     break
             if not exists:
@@ -167,6 +173,7 @@ class Installer:
             mod.installUserSettings()
             mod.uninstallXmlKeys()
             mod.installXmlKeys()
+            mod.installInputKeys()
             # TODO: re-fetch and copy xml files
             return True
         except Exception as err:

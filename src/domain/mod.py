@@ -33,6 +33,7 @@ class Mod:
     usersettings: List[object] = field(default_factory=list)
     inputsettings: List[object] = field(default_factory=list)
     hidden: List[str] = field(default_factory=list)
+    readmes: List[str] = field(default_factory=list)
 
     def __post_init__(self):
         self.date = strftime("%Y-%m-%d %H:%M:%S", gmtime())
@@ -193,6 +194,7 @@ class Mod:
                 text = userfile.write(text)
 
     def installInputKeys(self) -> int:
+        print("installing input settings", str(self.inputsettings))
         added = 0
         if (self.inputsettings):
             text = ''
@@ -261,7 +263,7 @@ class Mod:
                                 r"\[" + keycontext + r"\]\n",
                                 r"[" + keycontext + r"]\n" + str(key) + r"\n",
                                 text)
-            with open(data.config.settings + "/input.settings", 'w', encoding="utf-16") as userfile:
+            with open(data.config.settings + "/input.settings", 'w', encoding="utf-8") as userfile:
                 text = userfile.write(text)
         return added
 
@@ -277,7 +279,7 @@ class Mod:
                     config.add_section(setting.context)
                 config.set(setting.context, setting.option, setting.value)
                 added += 1
-            with open(data.config.settings+"/user.settings", 'w', encoding="utf-16") as userfile:
+            with open(data.config.settings+"/user.settings", 'w', encoding="utf-8") as userfile:
                 config.write(userfile, space_around_delimiters=False)
         return added
 
@@ -290,7 +292,7 @@ class Mod:
             for setting in iter(self.usersettings):
                 if config.has_section(setting.context):
                     config.remove_option(setting.context, setting.option)
-            with open(data.config.settings+"/user.settings", 'w', encoding="utf-16") as userfile:
+            with open(data.config.settings+"/user.settings", 'w', encoding="utf-8") as userfile:
                 config.write(userfile, space_around_delimiters=False)
 
     def __repr__(self):
@@ -336,4 +338,8 @@ class Mod:
                     context = elem.context
                     string += '[' + context + ']' + '\n'
                 string += str(elem) + "\n"
+        if (self.readmes):
+            string += "\nREADMES:\n"
+            for readme in iter(self.readmes):
+                string += readme + "\n"
         return string
